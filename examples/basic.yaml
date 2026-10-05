@@ -1,5 +1,10 @@
+# Reads battery voltage, current, power, state of charge, capacity, health and status flags from the
+# Soldered Fuel Gauge BQ27441 breakout every 10 seconds.
+# The gauge is powered from the battery: connect the battery first, otherwise it does not respond on I2C.
+# Set design_capacity to your battery's capacity in mAh. See README for the battery model options.
+
 esphome:
-  name: soldered-esphome-component-template-test
+  name: soldered-bq27441-basic
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -8,11 +13,54 @@ esp32:
 
 logger:
   level: DEBUG
+  hardware_uart: UART0
 
 external_components:
   - source:
       type: local
       path: ../components
-    components: [soldered_esphome_component_template]
+    components: [soldered_bq27441]
 
-soldered_esphome_component_template:
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  scan: true
+
+sensor:
+  - platform: soldered_bq27441
+    id: fuel_gauge
+    address: 0x55
+    update_interval: 10s
+    design_capacity: 600 # mAh
+    terminate_voltage: 3000 # mV
+    taper_current: 60 # mA, charger's charge termination current
+    voltage:
+      name: "Battery Voltage"
+    current:
+      name: "Battery Current"
+    power:
+      name: "Battery Power"
+    battery_level:
+      name: "Battery Level"
+    remaining_capacity:
+      name: "Battery Remaining Capacity"
+    full_capacity:
+      name: "Battery Full Capacity"
+    state_of_health:
+      name: "Battery Health"
+    temperature:
+      name: "Fuel Gauge Temperature"
+
+binary_sensor:
+  - platform: soldered_bq27441
+    soldered_bq27441_id: fuel_gauge
+    fully_charged:
+      name: "Battery Fully Charged"
+    fast_charge_allowed:
+      name: "Battery Fast Charge Allowed"
+    discharging:
+      name: "Battery Discharging"
+    battery_low:
+      name: "Battery Low"
+    battery_critical:
+      name: "Battery Critical"
